@@ -1,6 +1,7 @@
 package com.example.batchservice.batch;
 
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,10 +19,12 @@ public class JobScheduler {
         this.userNotificationJob = userNotificationJob;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정
+    @Scheduled(cron = "0 */1 * * * ?")
     public void scheduleJob() {
         try {
-            jobLauncher.run(userNotificationJob, new org.springframework.batch.core.JobParameters());
+            jobLauncher.run(userNotificationJob, new JobParametersBuilder()
+                    .addLong("timestamp", System.currentTimeMillis()) // 고유 파라미터 추가
+                    .toJobParameters());
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -21,7 +21,7 @@ public class EmailReader implements ItemReader<String> {
     @Override
     public String read() {
         if (emails == null) {
-            emails = jdbcTemplate.queryForList("SELECT user_id FROM member", String.class);
+            emails = jdbcTemplate.queryForList("SELECT email FROM subscriber", String.class);
         }
 
         if (index < emails.size()) {
