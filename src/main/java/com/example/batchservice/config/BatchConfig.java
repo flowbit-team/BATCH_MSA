@@ -1,8 +1,6 @@
 package com.example.batchservice.config;
 
-import com.example.batchservice.processor.EmailProcessor;
-import com.example.batchservice.reader.EmailReader;
-import com.example.batchservice.writer.EmailWriter;
+import com.example.batchservice.processor.EmailTasklet;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -17,17 +15,13 @@ public class BatchConfig {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final EmailReader emailReader;
-    private final EmailProcessor emailProcessor;
-    private final EmailWriter emailWriter;
+    private final EmailTasklet emailTasklet; // ✅ Tasklet 주입
 
     public BatchConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
-                       EmailReader emailReader, EmailProcessor emailProcessor, EmailWriter emailWriter) {
+                       EmailTasklet emailTasklet) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
-        this.emailReader = emailReader;
-        this.emailProcessor = emailProcessor;
-        this.emailWriter = emailWriter;
+        this.emailTasklet = emailTasklet;
     }
 
     @Bean
@@ -40,10 +34,7 @@ public class BatchConfig {
     @Bean
     public Step emailNotificationStep() {
         return stepBuilderFactory.get("emailNotificationStep")
-                .<String, String>chunk(10) // 10개씩 묶어서 처리
-                .reader(emailReader)
-                .processor(emailProcessor)
-                .writer(emailWriter)
+                .tasklet(emailTasklet) // Tasklet 사용 (청크 X)
                 .build();
     }
 }
