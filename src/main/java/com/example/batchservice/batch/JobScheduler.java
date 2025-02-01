@@ -1,5 +1,6 @@
 package com.example.batchservice.batch;
 
+import com.example.batchservice.processor.EmailProcessor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -17,13 +18,15 @@ public class JobScheduler {
     private final JobLauncher jobLauncher;
     private final Job userNotificationJob;
     private final JdbcTemplate jdbcTemplate;
+    private final EmailProcessor emailProcessor; // EmailProcessor를 주입받음
     private static boolean isRunning = false; // 실행 상태 변수 추가
 
     @Autowired
-    public JobScheduler(JobLauncher jobLauncher, Job userNotificationJob, JdbcTemplate jdbcTemplate) {
+    public JobScheduler(JobLauncher jobLauncher, Job userNotificationJob, JdbcTemplate jdbcTemplate, EmailProcessor emailProcessor) {
         this.jobLauncher = jobLauncher;
         this.userNotificationJob = userNotificationJob;
         this.jdbcTemplate = jdbcTemplate;
+        this.emailProcessor = emailProcessor; // 생성자에서 주입
     }
 
     /**
@@ -67,16 +70,20 @@ public class JobScheduler {
     }
 
     /**
-     * 한국 시간 아침 7시에 모든 이메일의 'sent' 상태를 False로 초기화
+     * 한국 시간 아침 7시에 모든 이메일의 'sent' 상태를 False로 초기화하고 템플릿 캐시도 초기화
      */
     @Scheduled(cron = "0 0 10 * * ?") // 한국 시간 아침 7시에 실행 (UTC 10시)
-    public void resetEmailStatus() {
+    public void resetEmailStatusAndTemplate() {
         try {
+            // 이메일 상태 초기화
             System.out.println("[Scheduler] 한국 시간 아침 7시 - 이메일 상태 초기화 시작.");
             jdbcTemplate.update("UPDATE subscriber SET sent = FALSE WHERE sent = TRUE"); // 상태를 False로 초기화
             System.out.println("[Scheduler] 이메일 상태 초기화 완료.");
+
+            // 템플릿 캐시 초기화
+            emailProcessor.resetTemplateCache(); // 템플릿 캐시 초기화
         } catch (Exception e) {
-            System.err.println("이메일 상태 초기화 중 오류 발생: " + e.getMessage());
+            System.err.println("이메일 상태 초기화 또는 템플릿 초기화 중 오류 발생: " + e.getMessage());
         }
     }
 }

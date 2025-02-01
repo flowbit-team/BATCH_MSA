@@ -23,7 +23,7 @@ public class EmailProcessor {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0");
 
     private final TemplateEngine templateEngine;
-    private String cachedTemplate = null; // ✅ 캐시된 템플릿
+    private String cachedTemplate = null; //  캐시된 템플릿
 
     public EmailProcessor(TemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
@@ -32,7 +32,6 @@ public class EmailProcessor {
     /**
      *  매일 오전 6시에 템플릿 캐시 초기화
      */
-    @Scheduled(cron = "0 0 6 * * ?") //  매일 오전 6시 정각 실행
     public void resetTemplateCache() {
         cachedTemplate = null;
         System.out.println("[EmailProcessor] 🔄 캐시된 이메일 템플릿이 초기화되었습니다. (7시)");
