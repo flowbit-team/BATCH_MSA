@@ -5,7 +5,6 @@ import com.example.batchservice.dto.NewsData;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
@@ -35,6 +34,86 @@ public class EmailProcessor {
     public void resetTemplateCache() {
         cachedTemplate = null;
         System.out.println("[EmailProcessor] 🔄 캐시된 이메일 템플릿이 초기화되었습니다. (7시)");
+    }
+
+    public String generateDiscordMessage() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // 암호화폐 가격 API 호출
+            String priceResponse = restTemplate.getForObject(PRICE_API_URL, String.class);
+            JsonNode priceRoot = objectMapper.readTree(priceResponse);
+
+            // 뉴스 데이터 API 호출
+            List<NewsData> newsDataList = new ArrayList<>();
+            for (String tag : List.of("비트코인", "이더리움", "리플")) {
+                String newsResponse = restTemplate.getForObject(NEWS_API_URL + tag + "&page=0&size=3", String.class);
+                JsonNode newsRoot = objectMapper.readTree(newsResponse);
+                newsDataList.addAll(extractNewsData(newsRoot, tag));
+            }
+
+            // 예측 가격과 실제 가격 마크다운 테이블 추가
+            StringBuilder discordMessage = new StringBuilder();
+            discordMessage.append("**플로우빗 예측가격과 최신뉴스 업데이트** \n\n");
+
+            // 마크다운 테이블 헤더
+            discordMessage.append("| 암호화폐 | 실제 가격 (원) | 예측 가격 (원) | 가격 변동 |\n");
+            discordMessage.append("|----------|----------------|----------------|-----------|\n");
+            discordMessage.append(formatCryptoDataForMarkdown(priceRoot));
+
+            // 최신 뉴스 추가
+            discordMessage.append("\n**최신 뉴스 업데이트**:\n");
+            for (NewsData news : newsDataList) {
+                discordMessage.append("[").append(news.getTitle()).append("](").append(news.getLink()).append(")\n");
+            }
+
+            return discordMessage.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "데이터를 가져오는 데 오류가 발생했습니다.";
+        }
+    }
+
+    private String formatCryptoDataForMarkdown(JsonNode rootNode) {
+        StringBuilder formattedData = new StringBuilder();
+        rootNode.fields().forEachRemaining(entry -> {
+            String crypto = entry.getKey();
+            JsonNode data = entry.getValue();
+            JsonNode actualData = data.get("actual_data");
+            JsonNode predictedData = data.get("predicted_data");
+
+            if (actualData != null && predictedData != null) {
+                Double actualPrice = actualData.get("close_price").asDouble();
+                Double predictedPrice = predictedData.get("predicted_krw").asDouble();
+                String priceChange = getPriceChange(actualPrice, predictedPrice);  // 가격 변동 (상승/하락 여부)
+
+                // 마크다운 테이블 행 추가
+                formattedData.append("| ").append(crypto).append(" | ")
+                        .append(formatPrice(actualPrice)).append(" | ")
+                        .append(formatPrice(predictedPrice)).append(" | ")
+                        .append(priceChange).append(" |\n");
+            }
+        });
+        return formattedData.toString();
+    }
+
+    /**
+     * 가격 차이 계산하여 상승/하락 여부를 반환하는 메소드
+     */
+    private String getPriceChange(Double actualPrice, Double predictedPrice) {
+        if (actualPrice == null || predictedPrice == null) {
+            return "";
+        }
+
+        if (predictedPrice > actualPrice) {
+            return "(상승)";
+        } else if (predictedPrice < actualPrice) {
+            return "(하락)";
+        } else {
+            return "(변동 없음)";
+        }
     }
 
     /**

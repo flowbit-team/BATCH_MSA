@@ -20,7 +20,7 @@ public class EmailTasklet implements Tasklet {
     private final EmailReader emailReader;
     private final EmailWriter emailWriter;
     private final EmailProcessor emailProcessor;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5); // ✅ 최대 5개의 병렬 실행 제한
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5); //  최대 5개의 병렬 실행 제한
 
     public EmailTasklet(EmailReader emailReader, EmailWriter emailWriter, EmailProcessor emailProcessor) {
         this.emailReader = emailReader;
@@ -57,7 +57,9 @@ public class EmailTasklet implements Tasklet {
                 e.printStackTrace();
             }
         }
-        executorService.shutdown();
+        if(executorService.isShutdown()){
+            executorService.shutdown();
+        }
         System.out.println("[EmailTasklet] 이메일 처리 완료. 총 소요 시간: " + (System.currentTimeMillis() - startTime) + "ms");
 
         return RepeatStatus.FINISHED;
