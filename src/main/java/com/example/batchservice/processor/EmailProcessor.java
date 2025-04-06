@@ -2,6 +2,7 @@ package com.example.batchservice.processor;
 
 import com.example.batchservice.dto.CryptoData;
 import com.example.batchservice.dto.NewsData;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
@@ -19,6 +20,7 @@ public class EmailProcessor {
 
     private static final String PRICE_API_URL = "https://api.flowbit.co.kr/bitcoin-service/predicted-value-list";
     private static final String NEWS_API_URL = "https://api.flowbit.co.kr/board-service/api/v1/news?sort=createdAt,desc&tag=";
+    private static final String NEWS_DATA_PLACE_HOLDER = "##NEWS_DATA_PLACE##";
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0");
 
     private final TemplateEngine templateEngine;
@@ -29,7 +31,7 @@ public class EmailProcessor {
     }
 
     /**
-     *  매일 오전 6시에 템플릿 캐시 초기화
+     * 매일 오전 6시에 템플릿 캐시 초기화
      */
     public void resetTemplateCache() {
         cachedTemplate = null;
@@ -120,39 +122,50 @@ public class EmailProcessor {
      * 이메일 템플릿을 한 번만 생성하여 모든 구독자에게 사용
      */
     public String generateEmailTemplate() {
-        if (cachedTemplate != null) {
-            return cachedTemplate; //  이미 생성된 템플릿이 있으면 재사용
-        }
-
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            // 암호화폐 가격 API 호출
-            String priceResponse = restTemplate.getForObject(PRICE_API_URL, String.class);
-            JsonNode priceRoot = objectMapper.readTree(priceResponse);
-
-            // 뉴스 데이터 API 호출
-            List<NewsData> newsDataList = new ArrayList<>();
-            for (String tag : List.of("비트코인", "이더리움", "리플")) {
-                String newsResponse = restTemplate.getForObject(NEWS_API_URL + tag + "&page=0&size=3", String.class);
-                JsonNode newsRoot = objectMapper.readTree(newsResponse);
-                newsDataList.addAll(extractNewsData(newsRoot, tag));
+            if (cachedTemplate == null) {
+                cachedTemplate = buildCachedTemplate();
             }
-
-            // 데이터를 템플릿에 전달
-            Context context = new Context();
-            context.setVariable("cryptoData", extractCryptoData(priceRoot));
-            context.setVariable("newsData", newsDataList);
-
-            // 템플릿 생성 후 캐싱
-            cachedTemplate = templateEngine.process("cryptoEmailTemplate", context);
+            String personalizedCryptoEmailTemplate = cachedTemplate.replace(NEWS_DATA_PLACE_HOLDER, buildNewsDataTemplate());
             System.out.println("[EmailProcessor] ✅ 새 이메일 템플릿이 생성되었습니다.");
-            return cachedTemplate;
+            return personalizedCryptoEmailTemplate;
         } catch (Exception e) {
             e.printStackTrace();
             return "<html><body><p>이메일 템플릿 생성 오류</p></body></html>";
         }
+    }
+
+    private String buildCachedTemplate() throws JsonProcessingException {
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Context context = new Context();
+
+        // 암호화폐 가격 API 호출
+        String priceResponse = restTemplate.getForObject(PRICE_API_URL, String.class);
+        JsonNode priceRoot = objectMapper.readTree(priceResponse);
+
+        // 데이터를 템플릿에 전달
+        context.setVariable("cryptoData", extractCryptoData(priceRoot));
+        context.setVariable("newsDataPlaceHolder", NEWS_DATA_PLACE_HOLDER);
+
+        // 템플릿 생성 후 캐싱
+        return templateEngine.process("cryptoEmailTemplate", context);
+    }
+
+    private String buildNewsDataTemplate() throws JsonProcessingException {
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Context context = new Context();
+
+        // 뉴스 데이터 API 호출
+        List<NewsData> newsDataList = new ArrayList<>();
+        for (String tag : List.of("비트코인", "이더리움", "리플")) {
+            String newsResponse = restTemplate.getForObject(NEWS_API_URL + tag + "&page=0&size=3", String.class);
+            JsonNode newsRoot = objectMapper.readTree(newsResponse);
+            newsDataList.addAll(extractNewsData(newsRoot, tag));
+        }
+        context.setVariable("newsData", newsDataList);
+        return templateEngine.process("newsDataTemplate", context);
     }
 
     private CryptoData extractCryptoData(JsonNode rootNode) {
