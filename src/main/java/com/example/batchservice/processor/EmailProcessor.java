@@ -88,6 +88,8 @@ public class EmailProcessor {
                 Double actualPrice = actualData.get("close_price").asDouble();
                 Double predictedPrice = predictedData.get("predicted_krw").asDouble();
                 String priceChange = getPriceChange(actualPrice, predictedPrice);  // 가격 변동 (상승/하락 여부)
+                String changeRate = calculateChangeRate(actualPrice, predictedPrice);
+
 
                 // 마크다운 테이블 행 추가
                 formattedData.append("| ").append(crypto).append(" | ")
@@ -163,34 +165,75 @@ public class EmailProcessor {
             JsonNode actualData = data.get("actual_data");
             JsonNode predictedData = data.get("predicted_data");
 
+            Double actualPriceVal = actualData != null ? actualData.get("close_price").asDouble() : null;
+            Double predictedPriceVal = predictedData != null ? predictedData.get("predicted_krw").asDouble() : null;
+
+            String actualPrice = formatPrice(actualPriceVal);
+            String predictedPrice = formatPrice(predictedPriceVal);
+            String changeRate = calculateChangeRate(actualPriceVal, predictedPriceVal);
+            String iconName = changeRate.startsWith("+") ? "up_badge.svg" : "down_badge.svg";
+            String iconUrl = "https://likelionvideo.s3.ap-northeast-2.amazonaws.com/" + iconName; // s3
+
             cryptoData.addCrypto(
                     crypto,
-                    formatPrice(actualData != null ? actualData.get("close_price").asDouble() : null),
+                    actualPrice,
                     actualData != null ? actualData.get("timestamp").asText() : null,
-                    formatPrice(predictedData != null ? predictedData.get("predicted_krw").asDouble() : null),
+                    predictedPrice,
                     predictedData != null ? predictedData.get("timestamp").asText() : null,
-                    getImagePath(crypto)
+                    getImagePath(crypto),
+                    changeRate,
+                    iconUrl
             );
+
         });
         return cryptoData;
     }
+
+    private String calculateChangeRate(Double actual, Double predicted) {
+        if (actual == null || predicted == null) return "0.00%";
+        double change = (predicted - actual) / actual * 100;
+        return String.format("%+.2f%%", change);
+    }
+
 
     private List<NewsData> extractNewsData(JsonNode rootNode, String tag) {
         List<NewsData> newsDataList = new ArrayList<>();
         rootNode.get("data").get("content").forEach(item -> {
             String title = Jsoup.parse(item.get("title").asText()).text();
             String description = Jsoup.parse(item.get("description").asText()).text();
+            String link = item.get("link").asText();
+            String rawImageUrl = item.get("img").asText();
+
+            // 이미지 URL 정제 로직
+            String imageUrl = refineImageUrl(rawImageUrl);
 
             newsDataList.add(new NewsData(
                     title,
-                    item.get("link").asText(),
+                    link,
                     description,
-                    item.get("img").asText(),
+                    imageUrl,
                     tag
             ));
         });
         return newsDataList;
     }
+
+    private String refineImageUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isEmpty()) return "";
+
+        // "http://..." 안에 "//www." 또는 "/www." 중복이 있는 경우 처리
+        int wwwIndex = rawUrl.indexOf("//www.");
+        if (wwwIndex == -1) {
+            wwwIndex = rawUrl.indexOf("/www.");
+        }
+
+        if (wwwIndex != -1) {
+            return "https://" + rawUrl.substring(wwwIndex + 2);  // www. 포함해서 뒤쪽만 사용
+        }
+
+        return rawUrl; // 문제가 없는 경우 그대로 반환
+    }
+
 
     private String formatPrice(Double price) {
         return (price == null) ? "-" : DECIMAL_FORMAT.format(price);

@@ -43,7 +43,7 @@ public class JobScheduler {
         this.emailProcessor = emailProcessor;
     }
 
-    /**
+    /**\
      * 5분마다 실행하며, 남은 이메일이 있으면 전송 및 Discord Webhook 전송
      */
     @Scheduled(cron = "0 0/1 * * * ?") // 5분마다 실행

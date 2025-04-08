@@ -9,9 +9,12 @@ import java.util.List;
 public class CryptoData {
     private final List<CryptoInfo> cryptos = new ArrayList<>();
 
-    public void addCrypto(String name, String actualPrice, String actualDate, String predictedPrice, String predictedDate, String imageUrl) {
-        cryptos.add(new CryptoInfo(name, actualPrice, actualDate, predictedPrice, predictedDate, imageUrl));
+    public void addCrypto(String name, String actualPrice, String actualDate,
+                          String predictedPrice, String predictedDate,
+                          String imageUrl, String changeRate, String changeRateIconUrl) {
+        cryptos.add(new CryptoInfo(name, actualPrice, actualDate, predictedPrice, predictedDate, imageUrl, changeRate, changeRateIconUrl));
     }
+
 
     public List<CryptoInfo> getCryptos() {
         return cryptos;
@@ -25,14 +28,20 @@ public class CryptoData {
         private final String predictedPrice;
         private final String predictedDate;
         private final String imageUrl;
+        private final String changeRate;
+        private final String changeRateIconUrl;
 
-        public CryptoInfo(String name, String actualPrice, String actualDate, String predictedPrice, String predictedDate, String imageUrl) {
+        public CryptoInfo(String name, String actualPrice, String actualDate,
+                          String predictedPrice, String predictedDate,
+                          String imageUrl, String changeRate, String changeRateIconUrl) {
             this.name = name;
             this.actualPrice = actualPrice;
             this.actualDate = actualDate;
             this.predictedPrice = predictedPrice;
             this.predictedDate = predictedDate;
             this.imageUrl = imageUrl;
+            this.changeRate = changeRate;
+            this.changeRateIconUrl = changeRateIconUrl;
         }
 
         public String getName() {
@@ -58,5 +67,14 @@ public class CryptoData {
         public String getImageUrl() {
             return imageUrl;
         }
+
+        public String getChangeRate() {
+            return changeRate;
+        }
+
+        public String getChangeRateIconUrl() {
+            return changeRateIconUrl;
+        }
     }
+
 }
