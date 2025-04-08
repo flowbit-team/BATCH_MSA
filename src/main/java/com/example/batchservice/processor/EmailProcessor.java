@@ -121,12 +121,12 @@ public class EmailProcessor {
     /**
      * 이메일 템플릿을 한 번만 생성하여 모든 구독자에게 사용
      */
-    public String generateEmailTemplate() {
+    public String generateEmailTemplate(List<String> keywords) {
         try {
             if (cachedTemplate == null) {
                 cachedTemplate = buildCachedTemplate();
             }
-            String personalizedCryptoEmailTemplate = cachedTemplate.replace(NEWS_DATA_PLACE_HOLDER, buildNewsDataTemplate());
+            String personalizedCryptoEmailTemplate = cachedTemplate.replace(NEWS_DATA_PLACE_HOLDER, buildNewsDataTemplate(keywords));
             System.out.println("[EmailProcessor] ✅ 새 이메일 템플릿이 생성되었습니다.");
             return personalizedCryptoEmailTemplate;
         } catch (Exception e) {
@@ -152,14 +152,14 @@ public class EmailProcessor {
         return templateEngine.process("cryptoEmailTemplate", context);
     }
 
-    private String buildNewsDataTemplate() throws JsonProcessingException {
+    private String buildNewsDataTemplate(List<String> keywords) throws JsonProcessingException {
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
         Context context = new Context();
 
         // 뉴스 데이터 API 호출
         List<NewsData> newsDataList = new ArrayList<>();
-        for (String tag : List.of("비트코인", "이더리움", "리플")) {
+        for (String tag : keywords) {
             String newsResponse = restTemplate.getForObject(NEWS_API_URL + tag + "&page=0&size=3", String.class);
             JsonNode newsRoot = objectMapper.readTree(newsResponse);
             newsDataList.addAll(extractNewsData(newsRoot, tag));

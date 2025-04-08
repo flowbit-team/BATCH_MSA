@@ -1,5 +1,6 @@
 package com.example.batchservice.processor;
 
+import com.example.batchservice.dto.SubscriberWithKeywords;
 import com.example.batchservice.reader.EmailReader;
 import com.example.batchservice.writer.EmailWriter;
 import org.springframework.batch.core.StepContribution;
@@ -33,16 +34,15 @@ public class EmailTasklet implements Tasklet {
         long startTime = System.currentTimeMillis();
         System.out.println("[EmailTasklet] 이메일 처리 시작...");
 
-        List<String> emails = emailReader.readAll();
-        System.out.println("[EmailTasklet] 총 이메일 수: " + emails.size());
+        List<SubscriberWithKeywords> subscriberWithKeywords = emailReader.readAll();
+        System.out.println("[EmailTasklet] 총 이메일 수: " + subscriberWithKeywords.size());
 
-        String emailTemplate = emailProcessor.generateEmailTemplate();
-        System.out.println("[EmailTasklet] 이메일 템플릿 생성 완료!");
 
-        List<Future<?>> futures = emails.stream()
-                .map(email -> executorService.submit(() -> {
+        List<Future<?>> futures = subscriberWithKeywords.stream()
+                .map(s -> executorService.submit(() -> {
+                    String emailTemplate = emailProcessor.generateEmailTemplate(s.getKeywords());
                     try {
-                        emailWriter.write(List.of(email + "::" + emailTemplate));
+                        emailWriter.write(List.of(s.getEmail() + "::" + emailTemplate));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
