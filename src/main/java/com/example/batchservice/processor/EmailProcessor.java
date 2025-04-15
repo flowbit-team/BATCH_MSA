@@ -25,10 +25,15 @@ public class EmailProcessor {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0");
 
     private final TemplateEngine templateEngine;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
     private String cachedTemplate = null; //  캐시된 템플릿
 
-    public EmailProcessor(TemplateEngine templateEngine) {
+    public EmailProcessor(TemplateEngine templateEngine, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.templateEngine = templateEngine;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -41,9 +46,6 @@ public class EmailProcessor {
 
     public String generateDiscordMessage() {
         try {
-            RestTemplate restTemplate = new RestTemplate();
-            ObjectMapper objectMapper = new ObjectMapper();
-
             // 암호화폐 가격 API 호출
             String priceResponse = restTemplate.getForObject(PRICE_API_URL, String.class);
             JsonNode priceRoot = objectMapper.readTree(priceResponse);
@@ -142,8 +144,6 @@ public class EmailProcessor {
     }
 
     private String buildCachedTemplate() throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
-        ObjectMapper objectMapper = new ObjectMapper();
         Context context = new Context();
 
         // 암호화폐 가격 API 호출
@@ -160,8 +160,6 @@ public class EmailProcessor {
     }
 
     private String buildNewsDataTemplate(List<String> keywords) throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
-        ObjectMapper objectMapper = new ObjectMapper();
         Context context = new Context();
 
         // 뉴스 데이터 API 호출
