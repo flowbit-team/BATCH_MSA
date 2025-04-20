@@ -23,17 +23,7 @@
         </tr>
     </table>
 
-    <div style="margin: 30px 0 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-            <h3 style="font-size: 16px; margin: 0 0 12px; font-weight: 500;">내 관심 키워드</h3>
-            <div style="font-size: 13px; color: #555; cursor: pointer;">키워드 설정 &gt;</div>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <div style="background: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 14px; color: #555555; border: 1px solid #F0F0F0;">#비트코인</div>
-            <div style="background: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 14px; color: #555555; border: 1px solid #F0F0F0;">#이더리움</div>
-            <div style="background: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 14px; color: #555555; border: 1px solid #F0F0F0;">#리플</div>
-        </div>
-    </div>
+<th:block th:text="${keywordsPlaceHolder}"></th:block>
 
     <div style="background: #ffffff; border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid #e5e7eb; box-sizing: border-box; width: 100%;">
 
@@ -74,23 +64,7 @@
         <a href="https://flowbit.co.kr" style="margin-top: 20px; display: block; text-align: center; background-color: #ffffff; color: #555555; padding: 14px 0; border-radius: 12px; text-decoration: none; font-weight: 500; border: 0.5px solid #555555 ">AI 차트해석 보기 &gt;</a>
     </div>
 
-    <div th:each="news : ${newsData}" style="margin-top: 24px; background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 20px; box-sizing: border-box;">
-        <div style="font-size: 13px; color: #999; margin-bottom: 8px;">Weekly Coin</div>
-        <div style="font-size: 17px; font-weight: 500; margin-bottom: 16px;" th:text="${news.title}">뉴스 제목</div>
-        <div style="overflow: hidden; border-radius: 12px; margin-bottom: 16px; height: 180px;">
-            <img th:if="${news.img}" th:src="${news.img}" alt="뉴스 이미지" style="width: 100%; height: 100%; object-fit: cover; max-width: 100%; height: auto;">
-            <img th:if="${news.img == null || news.img == ''}" src="https://likelionvideo.s3.ap-northeast-2.amazonaws.com/flowbit.png" alt="기본 이미지" style="width: 100%; height: 100%; object-fit: cover; max-width: 100%; height: auto;">
-        </div>
-        <div style="margin: 16px 0 8px; font-weight: 500; font-size: 15px;">AI 본문 요약</div>
-        <div style="font-size: 14px; color: #333; line-height: 1.5;" th:text="${news.description}">뉴스 설명</div>
-        <div style="margin-top: 16px;">
-            <div style="font-size: 13px; font-weight: 500; margin-bottom: 6px;">내 관심 키워드</div>
-            <div>
-                <span th:text="${'#' + news.pubDate}" style="background: #ffffff; padding: 6px 12px; border-radius: 4px; font-size: 14px; margin-right: 6px; border: 1px solid #F0F0F0;">#태그</span>
-            </div>
-        </div>
-        <a th:href="${news.link}" style="margin-top: 20px; display: inline-block; text-align: center; background-color: #2352d5; color: white; padding: 12px 16px; border-radius: 12px; text-decoration: none; font-weight: 500;">기사 원문 보기 &gt;</a>
-    </div>
+<th:block th:text="${newsDataPlaceHolder}"></th:block>
 
     <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #777; border-top: 1px solid #e5e7eb; padding-top: 24px;">
         <div style="margin-bottom: 12px;">

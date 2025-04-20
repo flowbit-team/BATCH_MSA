@@ -1,0 +1,9 @@
+    <div style="margin: 30px 0 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h3 style="font-size: 16px; margin: 0 0 12px; font-weight: 500;">내 관심 키워드</h3>
+            <div style="font-size: 13px; color: #555; cursor: pointer;">키워드 설정 &gt;</div>
+        </div>
+        <span th:each="keyword : ${keywords}" style="display: inline-block; flex-wrap: wrap; gap: 8px;">
+            <div style="background: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 14px; color: #555555; border: 1px solid #F0F0F0;" th:text="'#' + ${keyword}">#비트코인</div>
+        </span>
+    </div>
