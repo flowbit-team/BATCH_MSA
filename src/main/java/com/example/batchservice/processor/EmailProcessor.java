@@ -1,16 +1,5 @@
 package com.example.batchservice.processor;
 
-<<<<<<< Updated upstream
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.stereotype.Component;
-
-@Component
-public class EmailProcessor implements ItemProcessor<String, String> {
-
-    @Override
-    public String process(String email) {
-        return "Hello " + email + ", this is your daily update!";
-=======
 import com.example.batchservice.constants.AppConstants;
 import com.example.batchservice.dto.CryptoData;
 import com.example.batchservice.dto.NewsData;
@@ -19,6 +8,7 @@ import com.example.batchservice.service.TemplateCache;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -27,7 +17,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 @Component
-public class EmailProcessor {
+public class EmailProcessor implements ItemProcessor<String, String> {
     private static final Logger logger = LoggerFactory.getLogger(EmailProcessor.class);
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(AppConstants.Format.PRICE_FORMAT);
 
@@ -39,6 +29,17 @@ public class EmailProcessor {
         this.templateEngine = templateEngine;
         this.apiService = apiService;
         this.templateCache = templateCache;
+    }
+
+    @Override
+    public String process(String email) throws Exception {
+        try {
+            List<String> keywords = List.of("비트코인", "이더리움", "리플");
+            return generateEmailTemplate(keywords);
+        } catch (Exception e) {
+            logger.error("Error processing email for: {}", email, e);
+            throw e;
+        }
     }
 
     public String generateDiscordMessage() {
@@ -202,10 +203,10 @@ public class EmailProcessor {
             default:
                 return AppConstants.S3.FLOWBIT_IMAGE;
         }
->>>>>>> Stashed changes
     }
 
     private String getPriceBadgeUrl(Double actualPrice, Double predictedPrice) {
         return predictedPrice > actualPrice ? AppConstants.S3.UP_BADGE : AppConstants.S3.DOWN_BADGE;
     }
 }
+
